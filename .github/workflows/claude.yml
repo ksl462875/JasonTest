@@ -1,7 +1,14 @@
 name: Claude Code Review
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
+
+# 這段很重要 → 讓 runner 能取得 OIDC ID token & 寫 PR/留言
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   review:
@@ -10,6 +17,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # OIDC 模式下不需要提供 github_token，留空即可
+
