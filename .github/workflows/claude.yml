@@ -1,17 +1,25 @@
-name: Claude Code Review
+name: Claude Code (comment-trigger)
+
 on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  # 可保留 PR 事件用來做前置工作，但通常留言才是主觸發
   pull_request:
     types: [opened, synchronize, reopened]
 
-# 這段很重要 → 讓 runner 能取得 OIDC ID token & 寫 PR/留言
 permissions:
   id-token: write
   contents: read
-  pull-requests: write
   issues: write
+  pull-requests: write
 
 jobs:
-  review:
+  run:
+    if: >
+      github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment' ||
+      github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,5 +29,4 @@ jobs:
       - uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # OIDC 模式下不需要提供 github_token，留空即可
-
+          # 留白代表使用預設的「@claude」觸發詞
